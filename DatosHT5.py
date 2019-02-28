@@ -5,12 +5,15 @@
 
 import simpy
 import random
+import statistics as stats
 random.seed(5)
+
+listaTiempos = []
 
 class System:
     def __init__(self, env, instructionsRead):
         self.env = env
-        self.ram = simpy.Container(env, init= 15, capacity= 15)
+        self.ram = simpy.Container(env, init= 100, capacity= 100)
         self.cpu = simpy.Resource(env, capacity = 1)
         self.instructionsRead = instructionsRead
 
@@ -27,30 +30,40 @@ class Process:
 
     def ready(self,env,system):
         yield self.system.ram.get(self.memory)
-        print("ram",self.system.ram.level)
-        print("Memoria proceso",self.name,"es",self.memory)
-        print("El proceso",self.name,"tiene",self.instructions,"instrucciones\n")
+        print("El proceso",self.name,"tiene",self.instructions,"instrucciones")
+        print("Memoria asignada al proceso",self.name,"\n")
         while self.instructions > 0:
             with system.cpu.request() as req:
                 yield req
                 self.instructions -= system.instructionsRead
                 self.cronometro += 1
-                print("Tiempo proceso",self.name,"es",self.cronometro)
-                print("Le quedan", self.instructions,"instrucciones al proceso",self.name,"\n")
+                if self.instructions>0:
+                    print("Le quedan", self.instructions,"instrucciones al proceso",self.name,"\n")
+                yield env.timeout(1)
+                
+                waiting = random.randint(1,2)
+                if waiting == 1:
+                    print("El proceso",self.name,"esta en waiting durante 1 unidad de tiempo")
+                    yield env.timeout(1)
+                    print("El proceso",self.name,"esta en ready\n")
                 
             if self.instructions <=0:
-                print("Se termino de ejecutar el programa")
+                print("Se termino de ejecutar el proceso",self.name,"\n")
                 yield system.ram.put(self.memory)
-                print("memoria ram",self.system.ram.level,"\n")
+                listaTiempos.append(self.cronometro)
             
 env = simpy.Environment()
 sistema = System(env, 3)
-#def processGenerator(env, system):
+
 for i in range(10):
     name = i
     memory = random.randint(1,10)
     instructions = random.randint(1,10)
     process = Process(env,name,memory,instructions,sistema)
     
-
 env.run()
+tiempo = env.now
+print("El tiempo total de la ejecucion es de",tiempo)
+print("El promedio de tiempo de ejecucion de cada proceso es de",stats.mean(listaTiempos))
+print("La desviacion estandar del tiempo de ejecucion de cada proceso es de",stats.pstdev(listaTiempos))
+
