@@ -21,8 +21,8 @@ listaPromedio=[]
 class System:
     def __init__(self, env, instructionsRead):
         self.env = env
-        self.ram = simpy.Container(env, init= 100, capacity= 100)
-        self.cpu = simpy.Resource(env, capacity = 1)
+        self.ram = simpy.Container(env, init= 100, capacity= 100)#cambio de capacidad de memoria RAM
+        self.cpu = simpy.Resource(env, capacity = 2)#cambio de capacidada de procesar del CPU
         self.instructionsRead = instructionsRead
 
 #clse Process, todos los procesos que va a ejecutar el sistema operativo
@@ -60,7 +60,7 @@ class Process:
                     print("El proceso",self.name,"esta en waiting durante 1 unidad de tiempo")
                     yield env.timeout(1)
                     print("El proceso",self.name,"esta en ready\n")
-            # si ya o tiene instrucciones termina
+            # si ya no tiene instrucciones termina
             if self.instructions <=0:
                 print("Se termino de ejecutar el proceso",self.name,"\n")
                 self.cronometro= env.now
@@ -73,7 +73,7 @@ env = simpy.Environment()
 sistema = System(env, 3)
 #metodo para generar procesos
 def processGenerator(env,num):
-    for i in range(num):
+    for i in range(200):
         name = i
         memory = random.randint(1,10)
         instructions = random.randint(1,10)
